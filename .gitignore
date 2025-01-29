@@ -1,0 +1,6 @@
+# Global
+.ropeproject
+
+# Backend
+__pycache__
+test.db
