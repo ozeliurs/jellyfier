@@ -7,11 +7,19 @@ class AudioChannelCreate(SQLModel):
     channel: str
     codec: str
 
-
 class SubtitleChannelCreate(SQLModel):
     subtitle: str
     codec: str
 
+class AudioChannelRead(SQLModel):
+    id: int
+    channel: str
+    codec: str
+
+class SubtitleChannelRead(SQLModel):
+    id: int
+    subtitle: str
+    codec: str
 
 class FileCreate(SQLModel):
     filepath: str
@@ -22,3 +30,14 @@ class FileCreate(SQLModel):
     video_resolution: Optional[str] = None
     audio_channels: Optional[List[AudioChannelCreate]] = []
     subtitle_channels: Optional[List[SubtitleChannelCreate]] = []
+
+class FileRead(SQLModel):
+    id: int
+    filepath: str
+    filename: str
+    file_extension: str
+    file_size: int
+    video_codec: Optional[str] = None
+    video_resolution: Optional[str] = None
+    audio_channels: List[AudioChannelRead] = []
+    subtitle_channels: List[SubtitleChannelRead] = []
