@@ -45,7 +45,7 @@ def get_file_info(file_path):
                 )
             elif stream["codec_type"] == "audio":
                 audio_channel = {
-                    "channel": stream.get("channel_layout", "unknown"),
+                    "channel": stream.get("tags", {}).get("language", "unknown"),
                     "codec": stream.get("codec_name"),
                 }
                 file_info["audio_channels"].append(audio_channel)
