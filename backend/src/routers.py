@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from src.crud import create_file, delete_file, get_file, get_files
 from src.database import get_session
-from src.models import File
+from src.models import AudioChannel, File, SubtitleChannel
 from src.schemas import FileCreate
 
 file_router = APIRouter()
@@ -11,7 +11,22 @@ file_router = APIRouter()
 
 @file_router.post("/", response_model=File)
 def create_new_file(file: FileCreate, session: Session = Depends(get_session)):
-    db_file = File.from_orm(file)
+    db_file = File(
+        filepath=file.filepath,
+        filename=file.filename,
+        file_extension=file.file_extension,
+        file_size=file.file_size,
+        video_codec=file.video_codec,
+        video_resolution=file.video_resolution,
+        audio_channels=[AudioChannel(**audio) for audio in file.audio_channels]
+        if file.audio_channels
+        else [],
+        subtitle_channels=[
+            SubtitleChannel(**subtitle) for subtitle in file.subtitle_channels
+        ]
+        if file.subtitle_channels
+        else [],
+    )
     return create_file(session, db_file)
 
 
