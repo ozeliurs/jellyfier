@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "backend/src/**"
+      - "backend/requirements.txt"
+      - "backend/Dockerfile"
 
 permissions:
   contents: read
