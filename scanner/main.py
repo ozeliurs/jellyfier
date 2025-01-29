@@ -45,12 +45,14 @@ def get_file_info(file_path):
                 )
             elif stream["codec_type"] == "audio":
                 audio_channel = {
+                    "name": stream.get("tags", {}).get("title", "unknown"),
                     "channel": stream.get("tags", {}).get("language", "unknown"),
                     "codec": stream.get("codec_name"),
                 }
                 file_info["audio_channels"].append(audio_channel)
             elif stream["codec_type"] == "subtitle":
                 subtitle_channel = {
+                    "name": stream.get("tags", {}).get("title", "unknown"),
                     "subtitle": stream.get("tags", {}).get("language", "unknown"),
                     "codec": stream.get("codec_name"),
                 }
