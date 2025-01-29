@@ -18,11 +18,15 @@ def create_new_file(file: FileCreate, session: Session = Depends(get_session)):
         file_size=file.file_size,
         video_codec=file.video_codec,
         video_resolution=file.video_resolution,
-        audio_channels=[AudioChannel(**audio) for audio in file.audio_channels]
+        audio_channels=[
+            AudioChannel(channel=audio.channel, codec=audio.codec)
+            for audio in file.audio_channels
+        ]
         if file.audio_channels
         else [],
         subtitle_channels=[
-            SubtitleChannel(**subtitle) for subtitle in file.subtitle_channels
+            SubtitleChannel(subtitle=subtitle.subtitle, codec=subtitle.codec)
+            for subtitle in file.subtitle_channels
         ]
         if file.subtitle_channels
         else [],
