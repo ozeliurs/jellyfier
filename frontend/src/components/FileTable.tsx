@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { formatSize } from "../utils/formatSize";
 
 interface File {
   id: number;
@@ -75,9 +77,16 @@ const FileTable: React.FC<FileTableProps> = ({
                   onChange={() => handleSelectFile(file.id)}
                 />
               </td>
-              <td>{file.filename}</td>
+              <td>
+                <Link
+                  to={`/files/${file.id}`}
+                  className="text-blue-500 hover:underline"
+                >
+                  {file.filename}
+                </Link>
+              </td>
               <td>{file.file_extension}</td>
-              <td>{file.file_size}</td>
+              <td>{formatSize(file.file_size)}</td>
               <td>{file.video_codec}</td>
               <td>{file.video_resolution}</td>
             </tr>

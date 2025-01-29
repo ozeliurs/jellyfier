@@ -4,14 +4,26 @@ import FileTable from "../components/FileTable";
 
 const FileList: React.FC = () => {
   const [files, setFiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      const data = await getFiles();
-      setFiles(data);
+    const fetchAllFiles = async () => {
+      let allFiles: any[] = [];
+      let skip = 0;
+      const limit = 10;
+      let fetchedFiles: any[];
+
+      do {
+        fetchedFiles = await getFiles(skip, limit);
+        allFiles = [...allFiles, ...fetchedFiles];
+        skip += limit;
+      } while (fetchedFiles.length === limit);
+
+      setFiles(allFiles);
+      setLoading(false);
     };
 
-    fetchFiles();
+    fetchAllFiles();
   }, []);
 
   const handleDelete = async (ids: number[]) => {
@@ -23,6 +35,10 @@ const FileList: React.FC = () => {
     await deleteAllFiles();
     setFiles([]);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
