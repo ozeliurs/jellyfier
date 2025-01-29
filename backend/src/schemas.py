@@ -4,22 +4,30 @@ from sqlmodel import SQLModel
 
 
 class AudioChannelCreate(SQLModel):
+    name: str  # Add this line
     channel: str
     codec: str
 
+
 class SubtitleChannelCreate(SQLModel):
+    name: str  # Add this line
     subtitle: str
     codec: str
+
 
 class AudioChannelRead(SQLModel):
     id: int
+    name: str  # Add this line
     channel: str
     codec: str
 
+
 class SubtitleChannelRead(SQLModel):
     id: int
+    name: str  # Add this line
     subtitle: str
     codec: str
+
 
 class FileCreate(SQLModel):
     filepath: str
@@ -30,6 +38,7 @@ class FileCreate(SQLModel):
     video_resolution: Optional[str] = None
     audio_channels: Optional[List[AudioChannelCreate]] = []
     subtitle_channels: Optional[List[SubtitleChannelCreate]] = []
+
 
 class FileRead(SQLModel):
     id: int
