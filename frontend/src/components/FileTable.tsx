@@ -50,49 +50,63 @@ const FileTable: React.FC<FileTableProps> = ({
       <button onClick={onDeleteAll} className="btn btn-danger">
         Delete All
       </button>
-      <table className="table-auto w-full mt-4">
-        <thead>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={files.length === selectedFiles.length}
-                onChange={handleSelectAll}
-              />
-            </th>
-            <th>Filename</th>
-            <th>File Extension</th>
-            <th>File Size</th>
-            <th>Video Codec</th>
-            <th>Video Resolution</th>
-          </tr>
-        </thead>
-        <tbody>
-          {files.map((file) => (
-            <tr key={file.id}>
-              <td>
+      <div className="overflow-x-auto mt-4">
+        <table className="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>
                 <input
                   type="checkbox"
-                  checked={selectedFiles.includes(file.id)}
-                  onChange={() => handleSelectFile(file.id)}
+                  className="checkbox"
+                  checked={files.length === selectedFiles.length}
+                  onChange={handleSelectAll}
                 />
-              </td>
-              <td>
-                <Link
-                  to={`/files/${file.id}`}
-                  className="text-blue-500 hover:underline"
-                >
-                  {file.filename}
-                </Link>
-              </td>
-              <td>{file.file_extension}</td>
-              <td>{formatSize(file.file_size)}</td>
-              <td>{file.video_codec}</td>
-              <td>{file.video_resolution}</td>
+              </th>
+              <th>Filename</th>
+              <th>File Extension</th>
+              <th>File Size</th>
+              <th>Video Codec</th>
+              <th>Video Resolution</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {files.map((file) => (
+              <tr key={file.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={selectedFiles.includes(file.id)}
+                    onChange={() => handleSelectFile(file.id)}
+                  />
+                </td>
+                <td>
+                  <Link
+                    to={`/files/${file.id}`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    {file.filename}
+                  </Link>
+                </td>
+                <td>{file.file_extension}</td>
+                <td>{formatSize(file.file_size)}</td>
+                <td>{file.video_codec}</td>
+                <td>{file.video_resolution}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th></th>
+              <th>Filename</th>
+              <th>File Extension</th>
+              <th>File Size</th>
+              <th>Video Codec</th>
+              <th>Video Resolution</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   );
 };

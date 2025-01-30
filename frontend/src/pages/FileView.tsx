@@ -30,11 +30,11 @@ const FileView: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">File Details</h1>
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Audio Channels</h2>
-        <table className="table-auto w-full mt-2">
+        <table className="table table-zebra w-full mt-2">
           <thead>
             <tr>
               <th>Name</th>
@@ -55,7 +55,7 @@ const FileView: React.FC = () => {
       </div>
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Subtitle Channels</h2>
-        <table className="table-auto w-full mt-2">
+        <table className="table table-zebra w-full mt-2">
           <thead>
             <tr>
               <th>Name</th>
