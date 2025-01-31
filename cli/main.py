@@ -308,7 +308,10 @@ def transcode(
     files = get_files(server_url)
     filtered_files = filter_files(files)
 
-    files_to_transcode = filtered_files[:count]
+    if count == 0:
+        files_to_transcode = filtered_files
+    else:
+        files_to_transcode = filtered_files[:count]
 
     print(f"⚙️ You are about to transcode {len(files_to_transcode)} files")
     for file in files_to_transcode:
