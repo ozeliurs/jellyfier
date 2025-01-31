@@ -229,15 +229,22 @@ def stats(server_url: str | None = None):
 def filter_files(files):
     filtered_files = []
     for file in files:
+        if any(
+            [sub["codec"] == "hdmv_pgs_subtitle" for sub in file["subtitle_channels"]]
+        ):
+            continue
+
         if file["video_codec"] != "h264":
             filtered_files.append(file)
             continue
 
-        if not all(audio["codec"] == "aac" for audio in file["audio_channels"]):
+        if len(file["audio_channels"]) > 0 and not all(
+            audio["codec"] == "aac" for audio in file["audio_channels"]
+        ):
             filtered_files.append(file)
             continue
 
-        if not all(
+        if len(file["subtitle_channels"]) > 0 and not all(
             subtitle["codec"] == "srt" for subtitle in file["subtitle_channels"]
         ):
             filtered_files.append(file)
