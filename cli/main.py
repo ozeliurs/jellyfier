@@ -6,6 +6,7 @@ from pathlib import Path
 
 import requests
 import typer
+from rich import print
 from rich.progress import Progress
 
 config_path = Path.home() / ".jellyfier"
@@ -301,14 +302,16 @@ def transcode(
 
             # Copy the file to a temporary location
             temp_file = temp_transcode_path / file.name
-            print(f"📂 Making temporary copy of {file} at {temp_file}")
+            print(
+                f"📂 Making temporary copy of [blue]{file}[/blue] at [red]{temp_file}[/red]"
+            )
             shutil.copy(file, temp_file)
 
             # Transcode the file
             transcode_file(temp_file)
 
             # Delete the temporary file
-            print(f"🗑️ Deleting {temp_file}")
+            print(f"🗑️ Deleting [red]{temp_file}[/red]")
             temp_file.unlink()
 
             # Copy the transcoded file back to the original location
@@ -318,15 +321,18 @@ def transcode(
 
             # Move file to file.old
             if delete_after:
+                print(f"🗑️ Deleting [blue]{file}[/blue]")
                 file.unlink()
             else:
                 old_file = file.with_suffix(f"{file.suffix}.old")
-                print(f"🔄 Renaming {file} to {old_file}")
+                print(f"🔄 Renaming [blue]{file}[/blue] to [blue]{old_file}[/blue]")
                 file.rename(old_file)
 
-            print(f"📂 Copying {temp_transcoded_file} to {transcoded_file}")
+            print(
+                f"📂 Copying [red]{temp_transcoded_file}[/red] to [blue]{transcoded_file}[/blue]"
+            )
             shutil.copy(temp_transcoded_file, transcoded_file)
-            print(f"🗑️ Deleting {temp_transcoded_file}")
+            print(f"🗑️ Deleting [red]{temp_transcoded_file}[/red]")
             temp_transcoded_file.unlink()
 
             # Delete the file from the server
