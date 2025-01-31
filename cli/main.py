@@ -170,6 +170,19 @@ def stats(server_url: str | None = None):
     print(f"📁 Total files scanned: {total_files}")
     print(f"💾 Total size of all files: {human_readable_size(total_size)}")
 
+    # Calculate the proportion of files needing transcoding
+    files_needing_transcoding = filter_files(files)
+    percent_needing_transcoding = round(
+        (len(files_needing_transcoding) / total_files) * 100
+    )
+
+    with Progress() as progress:
+        progress.add_task(
+            "[cyan]Percent of files needing transcoding",
+            total=100,
+            completed=percent_needing_transcoding,
+        )
+
     # Calculate the proportion of video codecs
     print("\n🎥 ==== Video Codecs ====")
     codec_counts = {}
@@ -354,6 +367,7 @@ def delete(id: str, server_url: str | None = None):
             files = get_files(server_url)
             for file in files:
                 delete_file(file, server_url)
+        return
 
     response = requests.delete(f"{server_url}/files/{id}")
     if response.status_code == 200:
