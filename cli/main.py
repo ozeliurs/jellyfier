@@ -216,15 +216,20 @@ def stats(server_url: str | None = None):
 def filter_files(files):
     filtered_files = []
     for file in files:
-        if file["video_codec"] == "h264":
+        if file["video_codec"] != "h264":
+            filtered_files.append(file)
             continue
+
         if not all(audio["codec"] == "aac" for audio in file["audio_channels"]):
+            filtered_files.append(file)
             continue
+
         if not all(
             subtitle["codec"] == "srt" for subtitle in file["subtitle_channels"]
         ):
+            filtered_files.append(file)
             continue
-        filtered_files.append(file)
+
     return filtered_files
 
 
