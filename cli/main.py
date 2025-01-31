@@ -280,7 +280,9 @@ def delete_file(file, server_url):
 
 
 @app.command()
-def transcode(server_url: str | None = None, count: int = 1):
+def transcode(
+    server_url: str | None = None, count: int = 1, delete_after: bool = False
+):
     if server_url is None:
         server_url = get("server_url")
 
@@ -314,9 +316,13 @@ def transcode(server_url: str | None = None, count: int = 1):
 
             transcoded_file = file.with_suffix(temp_transcoded_file.suffix)
 
-            # Move file to file.old.ext
-            print(f"🔄 Renaming {file} to {file.with_suffix(f'.old{file.suffix}')}")
-            file.rename(file.with_suffix(f".old{file.suffix}"))
+            # Move file to file.old
+            if delete_after:
+                file.unlink()
+            else:
+                old_file = file.with_suffix(f"{file.suffix}.old")
+                print(f"🔄 Renaming {file} to {old_file}")
+                file.rename(old_file)
 
             print(f"📂 Copying {temp_transcoded_file} to {transcoded_file}")
             shutil.copy(temp_transcoded_file, transcoded_file)
@@ -325,6 +331,26 @@ def transcode(server_url: str | None = None, count: int = 1):
 
             # Delete the file from the server
             delete_file(o_file, server_url)
+
+
+@app.command()
+def delete(id: str, server_url: str | None = None):
+    if server_url is None:
+        server_url = get("server_url")
+
+    if id == "all":
+        if typer.confirm("Are you sure you want to delete all files?"):
+            files = get_files(server_url)
+            for file in files:
+                delete_file(file, server_url)
+
+    response = requests.delete(f"{server_url}/files/{id}")
+    if response.status_code == 200:
+        print(f"🗑️ Successfully deleted file with ID {id}")
+    else:
+        print(
+            f"❌ Failed to delete file with ID {id}. Status code: {response.status_code}, Response: {response.text}"
+        )
 
 
 if __name__ == "__main__":
