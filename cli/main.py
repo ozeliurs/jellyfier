@@ -393,7 +393,9 @@ def delete(id: str, server_url: str | None = None):
         server_url = get("server_url")
 
     if id == "all":
-        if typer.confirm("Are you sure you want to delete all files?"):
+        if typer.confirm(
+            "Are you sure you want to delete all files from the http server?"
+        ):
             files = get_files(server_url)
             for file in files:
                 delete_file(file, server_url)
@@ -406,6 +408,36 @@ def delete(id: str, server_url: str | None = None):
         print(
             f"❌ Failed to delete file with ID {id}. Status code: {response.status_code}, Response: {response.text}"
         )
+
+
+@app.command()
+def rollback(path: Path, dry_run: bool = True):
+    """find all .old files and rename them back to their original, removing the new file if it exists"""
+    file_count = 0
+    for root, _, files in os.walk(path):
+        for file in files:
+            file_count += 1
+            file_path = Path(root) / file
+            if file_path.suffix.lower() == ".old":
+                original_filename = file_path.name.replace(".old", "")
+                new_filename = file_path.name.rsplit(".", 2)[0] + ".mkv"
+
+                original_file = file_path.parent / original_filename
+                new_file = file_path.parent / new_filename
+
+                if new_file.exists():
+                    print(
+                        f"🗑️ {'Would delete' if dry_run else 'Deleting'} [blue]{new_file}[/blue]"
+                    )
+                    if not dry_run:
+                        new_file.unlink()
+
+                print(
+                    f"🔄 {'Would rename' if dry_run else 'Renaming'} [blue]{file_path}[/blue] to [blue]{new_file}[/blue]"
+                )
+                if not dry_run:
+                    file_path.rename(original_file)
+    print(f"📊 Scanned {file_count} files")
 
 
 if __name__ == "__main__":
