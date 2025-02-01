@@ -239,13 +239,14 @@ def filter_files(files):
             continue
 
         if len(file["audio_channels"]) > 0 and not all(
-            audio["codec"] == "aac" for audio in file["audio_channels"]
+            audio["codec"] in ["aac", "flac"] for audio in file["audio_channels"]
         ):
             filtered_files.append(file)
             continue
 
         if len(file["subtitle_channels"]) > 0 and not all(
-            subtitle["codec"] == "srt" for subtitle in file["subtitle_channels"]
+            subtitle["codec"] in ["srt", "ass", "subrip"]
+            for subtitle in file["subtitle_channels"]
         ):
             filtered_files.append(file)
             continue
