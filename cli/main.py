@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 from pathlib import Path
 
 import requests
@@ -306,6 +307,36 @@ def delete_file(file, server_url):
         )
 
 
+def post_transcode_operations(temp_file, file, o_file, server_url, delete_after):
+    """Handle all operations after transcoding in a separate thread"""
+    # Delete the temporary file
+    print(f"🗑️ Deleting [red]{temp_file}[/red]")
+    temp_file.unlink()
+
+    # Copy the transcoded file back to the original location
+    temp_transcoded_file = temp_file.with_suffix(".jellyfied.mkv")
+    transcoded_file = file.with_suffix(temp_transcoded_file.suffix)
+
+    # Move file to file.old
+    if delete_after:
+        print(f"🗑️ Deleting [blue]{file}[/blue]")
+        file.unlink()
+    else:
+        old_file = file.with_suffix(f"{file.suffix}.old")
+        print(f"🔄 Renaming [blue]{file}[/blue] to [blue]{old_file}[/blue]")
+        file.rename(old_file)
+
+    print(
+        f"📂 Copying [red]{temp_transcoded_file}[/red] to [blue]{transcoded_file}[/blue]"
+    )
+    shutil.copy(temp_transcoded_file, transcoded_file)
+    print(f"🗑️ Deleting [red]{temp_transcoded_file}[/red]")
+    temp_transcoded_file.unlink()
+
+    # Delete the file from the server
+    delete_file(o_file, server_url)
+
+
 @app.command()
 def transcode(
     server_url: str | None = None, count: int = 1, delete_after: bool = False
@@ -326,6 +357,7 @@ def transcode(
         print(file_to_string(file))
 
     if typer.confirm("Do you want to continue?"):
+        threads = []
         for o_file in files_to_transcode:
             file = Path(o_file["filepath"])
 
@@ -339,33 +371,17 @@ def transcode(
             # Transcode the file
             transcode_file(temp_file)
 
-            # Delete the temporary file
-            print(f"🗑️ Deleting [red]{temp_file}[/red]")
-            temp_file.unlink()
-
-            # Copy the transcoded file back to the original location
-            temp_transcoded_file = temp_file.with_suffix(".jellyfied.mkv")
-
-            transcoded_file = file.with_suffix(temp_transcoded_file.suffix)
-
-            # Move file to file.old
-            if delete_after:
-                print(f"🗑️ Deleting [blue]{file}[/blue]")
-                file.unlink()
-            else:
-                old_file = file.with_suffix(f"{file.suffix}.old")
-                print(f"🔄 Renaming [blue]{file}[/blue] to [blue]{old_file}[/blue]")
-                file.rename(old_file)
-
-            print(
-                f"📂 Copying [red]{temp_transcoded_file}[/red] to [blue]{transcoded_file}[/blue]"
+            # Start post-transcoding operations in a separate thread
+            thread = threading.Thread(
+                target=post_transcode_operations,
+                args=(temp_file, file, o_file, server_url, delete_after),
             )
-            shutil.copy(temp_transcoded_file, transcoded_file)
-            print(f"🗑️ Deleting [red]{temp_transcoded_file}[/red]")
-            temp_transcoded_file.unlink()
+            thread.start()
+            threads.append(thread)
 
-            # Delete the file from the server
-            delete_file(o_file, server_url)
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
 
 
 @app.command()
