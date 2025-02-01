@@ -310,7 +310,75 @@ def delete_file(file, server_url):
         )
 
 
-def post_transcode_operations(temp_file, file, o_file, server_url, delete_after):
+@app.command()
+def transcode(
+    server_url: str | None = None, count: int = 1, delete_after: bool = False
+):
+    if server_url is None:
+        server_url = get("server_url")
+
+    files = get_files(server_url)
+    filtered_files = filter_files(files)
+
+    if count == 0:
+        files_to_transcode = filtered_files
+    else:
+        files_to_transcode = filtered_files[:count]
+
+    print(f"⚙️ You are about to transcode {len(files_to_transcode)} files")
+    for file in files_to_transcode:
+        print(file_to_string(file))
+
+    if typer.confirm("Do you want to continue?"):
+        total_files = len(files_to_transcode)
+        threads = []
+
+        with Progress() as progress:
+            task_transcode = progress.add_task(
+                "[cyan]Transcoding...", total=total_files
+            )
+            task_transfer = progress.add_task(
+                "[green]Transferring...", total=total_files
+            )
+
+            for o_file in files_to_transcode:
+                file = Path(o_file["filepath"])
+
+                # Copy the file to a temporary location
+                temp_file = temp_transcode_path / file.name
+                print(
+                    f"📂 Making temporary copy of [blue]{file}[/blue] at [red]{temp_file}[/red]"
+                )
+                shutil.copy(file, temp_file)
+
+                # Transcode the file
+                transcode_file(temp_file)
+                progress.update(task_transcode, advance=1)
+
+                # Start post-transcoding operations in a separate thread
+                thread = threading.Thread(
+                    target=post_transcode_operations,
+                    args=(
+                        temp_file,
+                        file,
+                        o_file,
+                        server_url,
+                        delete_after,
+                        progress,
+                        task_transfer,
+                    ),
+                )
+                thread.start()
+                threads.append(thread)
+
+            # Wait for all threads to complete
+            for thread in threads:
+                thread.join()
+
+
+def post_transcode_operations(
+    temp_file, file, o_file, server_url, delete_after, progress, task_transfer
+):
     """Handle all operations after transcoding in a separate thread"""
     # Delete the temporary file
     print(f"🗑️ Deleting [red]{temp_file}[/red]")
@@ -339,52 +407,8 @@ def post_transcode_operations(temp_file, file, o_file, server_url, delete_after)
     # Delete the file from the server
     delete_file(o_file, server_url)
 
-
-@app.command()
-def transcode(
-    server_url: str | None = None, count: int = 1, delete_after: bool = False
-):
-    if server_url is None:
-        server_url = get("server_url")
-
-    files = get_files(server_url)
-    filtered_files = filter_files(files)
-
-    if count == 0:
-        files_to_transcode = filtered_files
-    else:
-        files_to_transcode = filtered_files[:count]
-
-    print(f"⚙️ You are about to transcode {len(files_to_transcode)} files")
-    for file in files_to_transcode:
-        print(file_to_string(file))
-
-    if typer.confirm("Do you want to continue?"):
-        threads = []
-        for o_file in files_to_transcode:
-            file = Path(o_file["filepath"])
-
-            # Copy the file to a temporary location
-            temp_file = temp_transcode_path / file.name
-            print(
-                f"📂 Making temporary copy of [blue]{file}[/blue] at [red]{temp_file}[/red]"
-            )
-            shutil.copy(file, temp_file)
-
-            # Transcode the file
-            transcode_file(temp_file)
-
-            # Start post-transcoding operations in a separate thread
-            thread = threading.Thread(
-                target=post_transcode_operations,
-                args=(temp_file, file, o_file, server_url, delete_after),
-            )
-            thread.start()
-            threads.append(thread)
-
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+    # Update transfer progress
+    progress.update(task_transfer, advance=1)
 
 
 @app.command()
