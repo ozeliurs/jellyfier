@@ -159,6 +159,38 @@ def human_readable_size(size, decimal_places=2):
 
 
 @app.command()
+def large(server_url: str | None = None):
+    if server_url is None:
+        server_url = get("server_url")
+
+    files = get_files(server_url)
+
+    # Sort files by size
+    sorted_files = sorted(files, key=lambda x: x["file_size"], reverse=True)
+
+    # Get the largest file
+    largest_file = sorted_files[0]
+    print(
+        f"\n📦 Largest file: {largest_file['filename']} ({human_readable_size(largest_file['file_size'])})"
+    )
+
+    # Find files within 1GB of the largest
+    gb_in_bytes = 1024 * 1024 * 1024
+    similar_size_files = [
+        f
+        for f in sorted_files[1:]
+        if abs(f["file_size"] - largest_file["file_size"]) <= gb_in_bytes
+    ]
+
+    if similar_size_files:
+        print("\n📋 Files within 1GB of largest:")
+        for file in similar_size_files:
+            print(f"- {file['filename']} ({human_readable_size(file['file_size'])})")
+    else:
+        print("\nNo other files within 1GB of largest file")
+
+
+@app.command()
 def stats(server_url: str | None = None):
     if server_url is None:
         server_url = get("server_url")
@@ -222,6 +254,27 @@ def stats(server_url: str | None = None):
     with Progress() as progress:
         for codec, count in subtitle_codec_counts.items():
             progress.add_task(f"[cyan]{codec}", total=total_subtitles, completed=count)
+
+
+# ========== Problems ==========
+
+
+@app.command()
+def problems(server_url: str | None = None):
+    if server_url is None:
+        server_url = get("server_url")
+
+    files = get_files(server_url)
+    pgs_files = []
+    for file in files:
+        if any(
+            [sub["codec"] == "hdmv_pgs_subtitle" for sub in file["subtitle_channels"]]
+        ):
+            pgs_files.append(file)
+
+    print(f"\n⚠️ Found {len(pgs_files)} files with PGS subtitles:")
+    for file in pgs_files:
+        print(file_to_string(file))
 
 
 # ========== Transcoder ==========
