@@ -436,8 +436,18 @@ def post_transcode_operations(
     print(f"🗑️ Deleting [red]{temp_file}[/red]")
     temp_file.unlink()
 
-    # Copy the transcoded file back to the original location
+    # Check transcoded file exists and is not empty
     temp_transcoded_file = temp_file.with_suffix(".jellyfied.mkv")
+    if not temp_transcoded_file.exists() or temp_transcoded_file.stat().st_size == 0:
+        print(
+            f"❌ Transcoding failed for [blue]{file}[/blue] - output file is empty or missing"
+        )
+        if temp_transcoded_file.exists():
+            temp_transcoded_file.unlink()
+        progress.update(task_transfer, advance=1)
+        delete_file(o_file, server_url)
+        return
+
     transcoded_file = file.with_suffix(temp_transcoded_file.suffix)
 
     # Move file to file.old
