@@ -498,32 +498,49 @@ def delete(id: str, server_url: str | None = None):
 
 @app.command()
 def rollback(path: Path, dry_run: bool = True):
-    """find all .old files and rename them back to their original, removing the new file if it exists"""
+    """Find all empty .mkv files and restore their .old versions if available"""
     file_count = 0
+    empty_files_found = 0
+    restored_count = 0
+
     for root, _, files in os.walk(path):
         for file in files:
             file_count += 1
             file_path = Path(root) / file
-            if file_path.suffix.lower() == ".old":
-                original_filename = file_path.name.replace(".old", "")
-                new_filename = file_path.name.rsplit(".", 2)[0] + ".mkv"
 
-                original_file = file_path.parent / original_filename
-                new_file = file_path.parent / new_filename
+            # Check for empty .mkv files
+            if file_path.suffix.lower() == ".mkv" and file_path.stat().st_size == 0:
+                empty_files_found += 1
+                old_file = file_path.with_suffix(file_path.suffix + ".old")
 
-                if new_file.exists():
+                if old_file.exists():
                     print(
-                        f"🗑️ {'Would delete' if dry_run else 'Deleting'} [blue]{new_file}[/blue]"
+                        f"Found empty file: [blue]{file_path}[/blue] ({file_path.stat().st_size} bytes)"
                     )
-                    if not dry_run:
-                        new_file.unlink()
+                    print(
+                        f"🗑️ {'Would delete' if dry_run else 'Deleting'} empty file [blue]{file_path}[/blue]"
+                    )
+                    print(
+                        f"🔄 {'Would restore' if dry_run else 'Restoring'} [blue]{old_file}[/blue] to [blue]{file_path}[/blue]"
+                    )
 
-                print(
-                    f"🔄 {'Would rename' if dry_run else 'Renaming'} [blue]{file_path}[/blue] to [blue]{new_file}[/blue]"
-                )
-                if not dry_run:
-                    file_path.rename(original_file)
-    print(f"📊 Scanned {file_count} files")
+                    if not dry_run:
+                        file_path.unlink()  # Delete empty file
+                        old_file.rename(file_path)  # Restore .old file
+                        restored_count += 1
+                else:
+                    print(
+                        f"⚠️ Found empty file but no .old version: [blue]{file_path}[/blue]"
+                    )
+
+    print("\n📊 Summary:")
+    print(f"Scanned: {file_count} files")
+    print(f"Found: {empty_files_found} empty files")
+    print(f"Restored: {restored_count} files")
+    if dry_run:
+        print(
+            "\nThis was a dry run. Use --no-dry-run to actually perform the operations."
+        )
 
 
 if __name__ == "__main__":
